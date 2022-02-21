@@ -1,7 +1,7 @@
 # Projects
 einsNull
 # About me
-Currently I am studying Computer Science and Economics at the
+I am currently studying Computer Science and Economics at the
 Hochschule München. Before, I completed my bachelors degree in Graphic Design and collected some work experience as a designer. My plan for the future is to combine these two fields. So I decided to test and improve my skills with this project.
 
 # Personal goals
