@@ -14,6 +14,7 @@ public class FileManagement {
     private static final Path subjectsPath = Paths.get(pathname + "subjects.txt");
     private static final Path topicGroupsPath = Paths.get(pathname + "topic-groups.txt");
     private static final Path topicsPath = Paths.get(pathname + "topics.txt");
+    private static final Path statisticsPath = Paths.get(pathname + "statistics.txt");
     private static List<String> contentsToWrite = new ArrayList<>();
 
     /**
@@ -180,9 +181,7 @@ public class FileManagement {
                     priority = Integer.parseInt(topicGroupsInfos.get(position));
                 } else if (position % 4 == 2 && topicGroupsInfos.get(position) != null) {
                     subject = findSubject(topicGroupsInfos.get(position));
-                } else if (topicGroupsInfos.get(position) != null && subject != null) {
-                    topicGroup = findTopicGroup(topicGroupsInfos.get(position), subject);
-                    new Topic(title, priority, subject, topicGroup);
+                    new Topic(title, priority, subject);
                 }
             }
         } catch (Exception e) {
@@ -254,7 +253,7 @@ public class FileManagement {
      * @return data type Topic with same title
      */
     private static Topic findTopicGroup(String title, Subject subject) {
-        ArrayList<Topic> topicGroups = subject.getTopicGroupList();
+        ArrayList<Topic> topicGroups = subject.getAllTopicGroupsList();
         for (Topic topicGroup : topicGroups) {
             if (title.equals(topicGroup.getTitle())) {
                 return topicGroup;
@@ -286,8 +285,300 @@ public class FileManagement {
      */
     private static String extractInfo(String line) {
         String[] lineProperties = line.split(": ");
-        System.out.println(Arrays.toString(lineProperties));
+//        System.out.println(Arrays.toString(lineProperties));
         return lineProperties[1];
+    }
+
+    public static void deleteSubject(Subject subject) {
+        try {
+            // Delete all topics
+            for (Topic topic : subject.getAlltopicsList()) {
+                deleteTopic(topic);
+            }
+
+            // Delete all topic groups
+             for (Topic topicGroup : subject.getAllTopicGroupsList()) {
+                  deleteTopicGroup(topicGroup);
+             }
+
+            // Delete actual subject
+            List<String> subjects = Files.readAllLines(subjectsPath);
+            System.out.println(subjects);
+            int position = 0;
+            for (int i = 0; i < subjects.size(); i++) {
+                String[] line = subjects.get(i).split(": ");
+                if (line[line.length - 1].equals(subject.getTitle())) {
+                    position = i;
+                }
+            }
+            for (int j = position; j < 4; j++) {
+                subjects.remove(position);
+            }
+            Subject.getSubjectList().remove(subject);
+            Files.write(subjectsPath, subjects, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void deleteTopicGroup(Topic topicGroup) {
+        try {
+            List<String> topicGroups = Files.readAllLines(topicGroupsPath);
+            int position = 0;
+            for (int i = 0; i < topicGroups.size(); i++) {
+                if (!topicGroups.get(i).equals("")) {
+                    String[] line = topicGroups.get(i).split(": ");
+                    if (line[line.length - 1].equals(topicGroup.getTitle())) {
+                        position = i;
+                    }
+                }
+            }
+            for (int j = position; j < 5; j++) {
+                topicGroups.remove(position);
+            }
+            Files.write(topicGroupsPath, topicGroups, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void deleteTopic(Topic topic) {
+        try {
+            List<String> topics = Files.readAllLines(topicsPath);
+            int position = 0;
+            for (int i = 0; i < topics.size(); i++) {
+                if (!topics.get(i).equals("")) {
+                    String[] line = topics.get(i).split(": ");
+                    if (line[line.length - 1].equals(topic.getTitle())) {
+                        position = i;
+                    }
+                }
+            }
+            for (int j = position; j < 6; j++) {
+                topics.remove(position);
+            }
+            Files.write(topicsPath, topics, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * This method determines the overall statistics about the contents of the application.
+     *
+     * @return ArrayList with the overall statistics
+     */
+    public static ArrayList<String> overallStatistics() {
+        ArrayList<String> overallStatistics = new ArrayList<>();
+        int totalTimeStudied = 0;
+        int subjects = Subject.getSubjectList().size();
+        int easySubjects = Selecting.getSubjectPriorityEasy().size();
+        int mediumSubjects = Selecting.getSubjectPriorityMedium().size();
+        int hardSubjects = Selecting.getSubjectPriorityHard().size();
+        int unsetSubjects = Selecting.getSubjectPriorityUnset().size();
+        int topicGroups = 0;
+        int easyTopicGroups = 0;
+        int mediumTopicGroups = 0;
+        int hardTopicGroups = 0;
+        int unsetTopicGroups = 0;
+        int topics = 0;
+        int easyTopics = 0;
+        int mediumTopics = 0;
+        int hardTopics = 0;
+        int unsetTopics = 0;
+        for (Subject subject : Subject.getSubjectList()) {
+            totalTimeStudied += subject.getTimeStudied();
+            topicGroups += subject.getAllTopicGroupsList().size();
+            easyTopicGroups += subject.getTopicGroupPriorityEasy().size();
+            mediumTopicGroups += subject.getTopicGroupPriorityMedium().size();
+            hardTopicGroups += subject.getTopicGroupPriorityHard().size();
+            unsetTopicGroups += subject.getTopicGroupPriorityUnset().size();
+            topics += subject.getAlltopicsList().size();
+            easyTopics += subject.getTopicPriorityEasy().size();
+            mediumTopics += subject.getTopicPriorityMedium().size();
+            hardTopics += subject.getTopicPriorityHard().size();
+            unsetTopics += subject.getTopicPriorityUnset().size();
+        }
+        overallStatistics.add(Integer.toString(totalTimeStudied));
+        addPriorities(overallStatistics, subjects, easySubjects, mediumSubjects, hardSubjects,unsetSubjects);
+        addPriorities(overallStatistics, topicGroups, easyTopicGroups, mediumTopicGroups, hardTopicGroups,unsetTopicGroups);
+        addPriorities(overallStatistics, topics, easyTopics, mediumTopics, hardTopics, unsetTopics);
+        return overallStatistics;
+    }
+
+    /**
+     * This method determines the statistics of a certain subject.
+     *
+     * @param subject subject for which the statistics shall be determined
+     * @return ArrayList with subject specific statistics
+     */
+    public static ArrayList<String> subjectSpecificStatistics(Subject subject) {
+        ArrayList<String> subjectSpecififcStatistics = new ArrayList<>();
+        String title = subject.getTitle();
+        int timeStudied = 0;
+        timeStudied += subject.getTimeStudied();
+        int topicGroups = subject.getAllTopicGroupsList().size();
+        int easyTopicGroups = subject.getTopicGroupPriorityEasy().size();
+        int mediumTopicGroups = subject.getTopicGroupPriorityMedium().size();
+        int hardTopicGroups = subject.getTopicGroupPriorityHard().size();
+        int unsetTopicGroups = subject.getTopicGroupPriorityUnset().size();
+        int topics = subject.getAlltopicsList().size();
+        int easyTopics = subject.getTopicPriorityEasy().size();
+        int mediumTopics = subject.getTopicPriorityMedium().size();
+        int hardTopics = subject.getTopicPriorityHard().size();
+        int unsetTopics = subject.getTopicPriorityUnset().size();
+        subjectSpecififcStatistics.add(title);
+        subjectSpecififcStatistics.add(Integer.toString(timeStudied));
+        addPriorities(subjectSpecififcStatistics, topicGroups, easyTopicGroups, mediumTopicGroups,
+                hardTopicGroups, unsetTopicGroups);
+        addPriorities(subjectSpecififcStatistics, topics, easyTopics, mediumTopics, hardTopics, unsetTopics);
+        return subjectSpecififcStatistics;
+    }
+
+    /**
+     * This method determines the statistics of a certain topic group.
+     *
+     * @param topicGroup topic group for which the statistics shall be determined
+     * @return ArrayList with topic group specific statistics
+     */
+    public static ArrayList<String> topicGroupSpecificStatistics(Topic topicGroup) {
+        ArrayList<String> topicGroupSpecificStatistics = new ArrayList<>();
+        String title = topicGroup.getTitle();
+        int timeStudied = 0;
+        timeStudied += topicGroup.getTimeStudied();
+        int topics = topicGroup.getTopicList().size();
+        int easyTopics = topicGroup.getTopicPriorityEasy().size();
+        int mediumTopics = topicGroup.getTopicPriorityMedium().size();
+        int hardTopics = topicGroup.getTopicPriorityHard().size();
+        int unsetTopics = topicGroup.getTopicPriorityUnset().size();
+        topicGroupSpecificStatistics.add(title);
+        topicGroupSpecificStatistics.add(Integer.toString(timeStudied));
+        addPriorities(topicGroupSpecificStatistics, topics, easyTopics, mediumTopics, hardTopics, unsetTopics);
+        return topicGroupSpecificStatistics;
+    }
+
+    /**
+     * This method expands the overall statistics by explanation statements.
+     * It formats the statistics to be written into the 'statistics.txt' file.
+     *
+     * @param rawStatistics ArrayList with numbers only without explanation
+     * @return ArrayList with formatted overall statistics
+     */
+    public static ArrayList<String> formattedOverallStatistics(ArrayList<String> rawStatistics) {
+        ArrayList<String> formattedOverallStatistics = new ArrayList<>();
+        formattedOverallStatistics.add("total time studied: " + rawStatistics.get(0));
+        formattedOverallStatistics.add("total subjects: " + rawStatistics.get(1));
+        formattedOverallStatistics.add("easy subjects: " + rawStatistics.get(2));
+        formattedOverallStatistics.add("medium subjects: " + rawStatistics.get(3));
+        formattedOverallStatistics.add("hard subjects: " + rawStatistics.get(4));
+        formattedOverallStatistics.add("unset subjects: " + rawStatistics.get(5));
+        formattedOverallStatistics.add("---");
+        formattedOverallStatistics.add("topic groups: " + rawStatistics.get(6));
+        formattedOverallStatistics.add("easy topic groups: " + rawStatistics.get(7));
+        formattedOverallStatistics.add("medium topic groups: " + rawStatistics.get(8));
+        formattedOverallStatistics.add("hard topic groups: " + rawStatistics.get(9));
+        formattedOverallStatistics.add("unset topic groups: " + rawStatistics.get(10));
+        formattedOverallStatistics.add("---");
+        formattedOverallStatistics.add("topics: " + rawStatistics.get(11));
+        formattedOverallStatistics.add("easy topics: " + rawStatistics.get(12));
+        formattedOverallStatistics.add("medium topics: " + rawStatistics.get(13));
+        formattedOverallStatistics.add("hard topics: " + rawStatistics.get(14));
+        formattedOverallStatistics.add("unset topics: " + rawStatistics.get(15));
+        formattedOverallStatistics.add("---");
+        return formattedOverallStatistics;
+    }
+
+    /**
+     * This method expands the subject specific statistics by explanation statements.
+     * It formats the statistics to be written into the 'statistics.txt' file.
+     *
+     * @param rawStatistics ArrayList with numbers only without explanation
+     * @return ArrayList with formatted subject statistics
+     */
+    public static ArrayList<String> formattedSubjectStatistics(ArrayList<String> rawStatistics) {
+        ArrayList<String> formattedSubjectStatistics = new ArrayList<>();
+        formattedSubjectStatistics.add("subject: " + rawStatistics.get(0));
+        formattedSubjectStatistics.add("time studied: " + rawStatistics.get(1));
+        formattedSubjectStatistics.add("total topic groups: " + rawStatistics.get(2));
+        formattedSubjectStatistics.add("easy topic groups: " + rawStatistics.get(3));
+        formattedSubjectStatistics.add("medium topic groups: " + rawStatistics.get(4));
+        formattedSubjectStatistics.add("hard topic groups: " + rawStatistics.get(5));
+        formattedSubjectStatistics.add("unset topic groups: " + rawStatistics.get(6));
+        formattedSubjectStatistics.add("total topics: " + rawStatistics.get(7));
+        formattedSubjectStatistics.add("easy topics: " + rawStatistics.get(8));
+        formattedSubjectStatistics.add("medium topics: " + rawStatistics.get(9));
+        formattedSubjectStatistics.add("hard topics: " + rawStatistics.get(10));
+        formattedSubjectStatistics.add("unset topics: " + rawStatistics.get(11));
+        formattedSubjectStatistics.add("---");
+        return formattedSubjectStatistics;
+    }
+
+    /**
+     * This method expands the topic group specific statistics by explanation statements.
+     * It formats the statistics to be written into the 'statistics.txt' file.
+     *
+     * @param rawStatistics ArrayList with numbers only without explanation
+     * @return ArrayList with formatted topic group statistics
+     */
+    public static ArrayList<String> formattedTopicGroupStatistics(ArrayList<String> rawStatistics) {
+        ArrayList<String> formattedTopicGroupStatistics = new ArrayList<>();
+        formattedTopicGroupStatistics.add("topic group: " + rawStatistics.get(0));
+        formattedTopicGroupStatistics.add("time studied: " + rawStatistics.get(1));
+        formattedTopicGroupStatistics.add("total topics: " + rawStatistics.get(2));
+        formattedTopicGroupStatistics.add("easy topics: " + rawStatistics.get(3));
+        formattedTopicGroupStatistics.add("medium topics: " + rawStatistics.get(4));
+        formattedTopicGroupStatistics.add("hard topics: " + rawStatistics.get(5));
+        formattedTopicGroupStatistics.add("unset topics: " + rawStatistics.get(6));
+        formattedTopicGroupStatistics.add("---");
+        return formattedTopicGroupStatistics;
+    }
+
+    /**
+     * This method adds the different Object types (subject, topic groups, topics)
+     * in total digits and priority specific to an ArrayList.
+     *
+     * @param arrayList ArrayList to which numbers shall be added.
+     * @param totalTypes total amount of object type
+     * @param easyTypes amount of object types with priority 'easy'
+     * @param mediumTypes amount of object types with priority 'medium'
+     * @param hardTypes amount of object types with priority 'hard'
+     * @param unsetTypes amount of object types with priority 'unset'
+     */
+    private static void addPriorities(ArrayList<String> arrayList, int totalTypes, int easyTypes,
+                                      int mediumTypes, int hardTypes, int unsetTypes) {
+        arrayList.add(Integer.toString(totalTypes));
+        arrayList.add(Integer.toString(easyTypes));
+        arrayList.add(Integer.toString(mediumTypes));
+        arrayList.add(Integer.toString(hardTypes));
+        arrayList.add(Integer.toString(unsetTypes));
+    }
+
+    /**
+     * This method writes all statistics to the 'statistics.txt' file.
+     * By this statistics can be saved, read and expanded.
+     */
+    public static void writeStatistics() {
+        try {
+            File statistics = new File(pathname + "statistics.txt");
+            ArrayList<String> rawOverallStatistics = overallStatistics();
+            ArrayList<String> allStatistics = new ArrayList<>(formattedOverallStatistics(rawOverallStatistics));
+
+            // add all subject specific statistics per subject
+            for (Subject subject : Subject.getSubjectList()) {
+                ArrayList<String> rawSubjectStatistics = subjectSpecificStatistics(subject);
+                allStatistics.addAll(formattedSubjectStatistics(rawSubjectStatistics));
+            }
+            // add all topic group specific statistics per topic group
+            for (Subject subject : Subject.getSubjectList()) {
+                for (Topic topicGroup : subject.getAllTopicGroupsList()) {
+                    ArrayList<String> rawTopicGroupStatistics = topicGroupSpecificStatistics(topicGroup);
+                    allStatistics.addAll(formattedTopicGroupStatistics(rawTopicGroupStatistics));
+                }
+            }
+            Files.write(statisticsPath, allStatistics, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -320,5 +611,9 @@ public class FileManagement {
 
     public static Path getTopicsPath() {
         return topicsPath;
+    }
+
+    public static Path getStatisticsPath() {
+        return statisticsPath;
     }
 }

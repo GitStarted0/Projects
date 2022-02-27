@@ -1,11 +1,15 @@
 package Logic;
 
+import java.time.Duration;
+import java.time.LocalDate;
+import java.util.ArrayList;
+
 /**
  * This class represents a topic tha student needs or wants to reinforce.
  * A student is able to define a topic as he or she wishes to.
  * Only parameters title and subject are crucial.
  *
- * A topic group is constructed when a topic is created without a answer.
+ * A topic group is constructed when a topic is created without an answer.
  * It is meant to work as a hierarchy construnction, which summarises topics to groups.
  *
  * @author Tim Freimann
@@ -17,6 +21,14 @@ public class Topic {
     private int priority;
     private Subject subject;
     private Topic topicGroup;
+    private ArrayList<Topic> topicList;
+    private ArrayList<Topic> topicPriorityUnset;
+    private ArrayList<Topic> topicPriorityHard;
+    private ArrayList<Topic> topicPriorityMedium;
+    private ArrayList<Topic> topicPriorityEasy;
+    private LocalDate startedStudying;
+    private LocalDate stoppedStudying;
+    private long timeStudied = 0;
 
     /**
      * Constructor with title, answer, priority, subject and topicGroup
@@ -34,33 +46,17 @@ public class Topic {
         this.subject = subject;
         this.topicGroup = topicGroup;
 
-        if (subject.getTopicList().contains(this)) {
-            System.out.println("Topic already exists. Still add topic?");
+        // Add topic to subjects and topic groups ArrayList with all topics
+        if (!subject.getAlltopicsList().contains(this)) {
+            subject.getAlltopicsList().add(this);
+            topicGroup.getTopicList().add(this);
         } else {
-            subject.getTopicList().add(this);
+            System.out.println("Topic already exists!");
         }
-    }
 
-    /**
-     * Constructor with title, priority, subject and topicGroup. This constructs a topic group
-     *
-     * @param title name of topic or a question
-     * @param priority starting priority
-     * @param subject topic belonging to certain subject
-     * @param topicGroup topic can be sorted to a certain topic group
-     */
-    Topic(String title, int priority, Subject subject, Topic topicGroup) {
-        this.title = title;
-        this.answer = null;
-        this.priority = priority;
-        this.subject = subject;
-        this.topicGroup = topicGroup;
-
-        if (!subject.getTopicGroupList().contains(this)) {
-            subject.getTopicGroupList().add(this);
-        } else {
-            System.out.println("Topic Group already exists. Still add Topic Group?");
-        }
+        // sorting topic by priority
+        sortByPriority(this, topicGroup.getTopicPriorityUnset(), topicGroup.getTopicPriorityHard(),
+                topicGroup.getTopicPriorityMedium(), topicGroup.getTopicPriorityEasy());
     }
 
     /**
@@ -78,14 +74,17 @@ public class Topic {
         this.subject = subject;
         this.topicGroup = null;
 
-        if (subject.getTopicList().contains(this)) {
-            System.out.println("Topic already exists. Still add topic?");
+        // Add topic to subjects ArrayList with all topics
+        if (!subject.getAlltopicsList().contains(this)) {
+            subject.getAlltopicsList().add(this);
         } else {
-            subject.getTopicList().add(this);
+            System.out.println("Topic already exists!");
         }
-    }
 
-    // title, answer, subject, topicGroup
+        // sorting topic by priority
+        sortByPriority(this, subject.getTopicPriorityUnset(), subject.getTopicPriorityHard(),
+                subject.getTopicPriorityMedium(), subject.getTopicPriorityEasy());
+    }
 
     /**
      * Constructor with title, answer, subject and topicGroup
@@ -102,11 +101,17 @@ public class Topic {
         this.subject = subject;
         this.topicGroup = topicGroup;
 
-        if (subject.getTopicList().contains(this)) {
-            System.out.println("Topic already exists. Still add topic?");
+        // Add topic to subjects and topic groups ArrayList with all topics
+        if (!subject.getAlltopicsList().contains(this)) {
+            subject.getAlltopicsList().add(this);
+            topicGroup.getTopicList().add(this);
         } else {
-            subject.getTopicList().add(this);
+            System.out.println("Topic already exists!");
         }
+
+        // sorting topic by priority
+        sortByPriority(this, topicGroup.getTopicPriorityUnset(), topicGroup.getTopicPriorityHard(),
+                topicGroup.getTopicPriorityMedium(), topicGroup.getTopicPriorityEasy());
     }
 
     /**
@@ -123,32 +128,16 @@ public class Topic {
         this.subject = subject;
         this.topicGroup = null;
 
-        if (subject.getTopicList().contains(this)) {
-            System.out.println("Topic already exists. Still add topic?");
+        // Add topic to subjects ArrayList with all topics
+        if (!subject.getAlltopicsList().contains(this)) {
+            subject.getAlltopicsList().add(this);
         } else {
-            subject.getTopicList().add(this);
+            System.out.println("Topic already exists!");
         }
-    }
 
-    /**
-     * Constructor with title, subject and topic group. (Topic Group Constructor)
-     *
-     * @param title name of topic or a question
-     * @param subject topic belonging to a certain subject
-     * @param topicGroup topic can be sorted to a certain topic group
-     */
-    Topic(String title, Subject subject, Topic topicGroup) {
-        this.title = title;
-        this.answer = null;
-        this.priority = 0;
-        this.subject = subject;
-        this.topicGroup = topicGroup;
-
-        if (subject.getTopicGroupList().contains(this)) {
-            System.out.println("Topic already exists. Still add topic?");
-        } else {
-            subject.getTopicGroupList().add(this);
-        }
+        // sorting topic by priority
+        sortByPriority(this, subject.getTopicPriorityUnset(), subject.getTopicPriorityHard(),
+                subject.getTopicPriorityMedium(), subject.getTopicPriorityEasy());
     }
 
     /**
@@ -164,12 +153,24 @@ public class Topic {
         this.priority = priority;
         this.subject = subject;
         this.topicGroup = null;
+        // all topics of topic group
+        this.topicList = new ArrayList<>();
+        // sorting ArrayLists for topic groups to sort topics by priority
+        this.topicPriorityUnset = new ArrayList<>();
+        this.topicPriorityHard = new ArrayList<>();
+        this.topicPriorityMedium = new ArrayList<>();
+        this.topicPriorityEasy = new ArrayList<>();
 
-        if (!subject.getTopicGroupList().contains(this)) {
-            subject.getTopicGroupList().add(this);
+        // Add topic group to subjects ArrayList with all topics
+        if (!subject.getAllTopicGroupsList().contains(this)) {
+            subject.getAllTopicGroupsList().add(this);
         } else {
-            System.out.println("Topic Group already exists. Still add Topic Group?");
+            System.out.println("Topic Group already exists!");
         }
+
+        // sorting topic group by priority
+        sortByPriority(this, subject.getTopicGroupPriorityUnset(), subject.getTopicGroupPriorityHard(),
+                subject.getTopicGroupPriorityMedium(), subject.getTopicGroupPriorityEasy());
     }
 
     /**
@@ -184,11 +185,51 @@ public class Topic {
         this.priority = 0;
         this.subject = subject;
         this.topicGroup = null;
+        // all topics of topic group
+        this.topicList = new ArrayList<>();
+        // sorting ArrayLists for topic groups to sort topics by priority
+        this.topicPriorityUnset = new ArrayList<>();
+        this.topicPriorityHard = new ArrayList<>();
+        this.topicPriorityMedium = new ArrayList<>();
+        this.topicPriorityEasy = new ArrayList<>();
 
-        if (!subject.getTopicGroupList().contains(this)) {
-            subject.getTopicGroupList().add(this);
+        // Add topic group to subjects ArrayList with all topics
+        if (!subject.getAllTopicGroupsList().contains(this)) {
+            subject.getAllTopicGroupsList().add(this);
         } else {
-            System.out.println("Topic Group already exists. Still add Topic Group?");
+            System.out.println("Topic Group already exists!");
+        }
+
+        // sorting topic group by priority
+        sortByPriority(this, subject.getTopicPriorityUnset(), subject.getTopicGroupPriorityHard(),
+                subject.getTopicPriorityMedium(), subject.getTopicGroupPriorityEasy());
+    }
+
+    public void calculateTimeStudied() {
+        Duration duration = Duration.between(this.getStartedStudying(), this.getStoppedStudying());
+        timeStudied += duration.getSeconds();
+    }
+
+    /**
+     * This method sorts a Topic or topic group into the correct priority ArrayList.
+     *
+     * @param topicOrTopicGroup topic or topic group which shall be sorted
+     * @param priorityUnset ArrayList for all topics / topic groups with 'unset' priority
+     * @param priorityHard ArrayList for all topics / topic groups with 'hard' priority
+     * @param priorityMedium ArrayList for all topics / topic groups with 'medium' priority
+     * @param priorityEasy ArrayList for all topics / topic groups with 'easy' priority
+     */
+    public void sortByPriority(Topic topicOrTopicGroup, ArrayList<Topic> priorityUnset,
+                               ArrayList<Topic> priorityHard, ArrayList<Topic> priorityMedium,
+                               ArrayList<Topic> priorityEasy) {
+        if (topicOrTopicGroup.getPriority() == 0) {
+            priorityUnset.add(topicOrTopicGroup);
+        } else if (topicOrTopicGroup.getPriority() == 1) {
+            priorityHard.add(topicOrTopicGroup);
+        } else if (topicOrTopicGroup.getPriority() == 2) {
+            priorityMedium.add(topicOrTopicGroup);
+        } else {
+            priorityEasy.add(topicOrTopicGroup);
         }
     }
 
@@ -232,4 +273,44 @@ public class Topic {
         this.topicGroup = topicGroup;
     }
 
+    public ArrayList<Topic> getTopicList() {
+        return topicList;
+    }
+
+    public void setStartedStudying(LocalDate startedStudying) {
+        this.startedStudying = startedStudying;
+    }
+
+    public void setStoppedStudying(LocalDate stoppedStudying) {
+        this.stoppedStudying = stoppedStudying;
+        calculateTimeStudied();
+    }
+
+    public LocalDate getStartedStudying() {
+        return startedStudying;
+    }
+
+    public LocalDate getStoppedStudying() {
+        return stoppedStudying;
+    }
+
+    public long getTimeStudied() {
+        return timeStudied;
+    }
+
+    public ArrayList<Topic> getTopicPriorityUnset() {
+        return topicPriorityUnset;
+    }
+
+    public ArrayList<Topic> getTopicPriorityHard() {
+        return topicPriorityHard;
+    }
+
+    public ArrayList<Topic> getTopicPriorityMedium() {
+        return topicPriorityMedium;
+    }
+
+    public ArrayList<Topic> getTopicPriorityEasy() {
+        return topicPriorityEasy;
+    }
 }
